@@ -1,6 +1,7 @@
 // Adds one sample shop and one live deal so the redemption page has something to show.
 // Run with `npm run seed` after `gcloud auth application-default login`, or against the
 // emulator with FIRESTORE_EMULATOR_HOST set. Safe to run again: it overwrites the same documents.
+// The sample shop has no owner, so it can be redeemed but not managed from the shop app.
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
@@ -16,6 +17,7 @@ async function main() {
     category: 'Salon',
     pincode: '560102',
     address: '',
+    ownerUid: '',
     createdAt: now,
   });
 
@@ -30,7 +32,11 @@ async function main() {
     oneUsePerCustomer: true,
     maxRedemptions: null,
     unlockedCount: 0,
+    usedCount: 0,
+    firstVisitCount: 0,
+    billTotal: 0,
     createdAt: now,
+    updatedAt: now,
   });
 
   console.log('Seeded shop MS2041 with one live deal. Open /s/MS2041 on the web page.');

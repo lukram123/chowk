@@ -32,6 +32,10 @@ const ICONS = {
   pin: '<path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
   back: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
   check: '<path d="m5 12 5 5 9-10"/>',
+  home: '<path d="M4 11 12 4l8 7v9H4z"/>',
+  qr:
+    '<rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/>' +
+    '<rect x="4" y="14" width="6" height="6"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM18 14h2M14 19v1"/>',
 } as const;
 
 export type IconName = keyof typeof ICONS;
@@ -65,8 +69,8 @@ export function logoMark(size: number, pin = '#0F4C43', square = '#FFC633'): SVG
   return svg;
 }
 
-export function lockup(): HTMLElement {
-  return h('a', { class: 'lockup', href: '/', 'aria-label': 'Chowk home' }, logoMark(28), h('span', {}, 'Chowk'));
+export function lockup(href = '/', label = 'Chowk home'): HTMLElement {
+  return h('a', { class: 'lockup', href, 'aria-label': label }, logoMark(28), h('span', {}, 'Chowk'));
 }
 
 /** Disables a button and swaps its label while work is in progress. */
@@ -112,11 +116,11 @@ export function messageView(message: { title: string; body: string; action?: Mes
   );
 }
 
-export function loadingView(): HTMLElement {
+export function loadingView(message = 'Loading the offer…'): HTMLElement {
   return h(
     'div',
     { class: 'screen' },
     h('header', { class: 'topbar' }, lockup()),
-    h('main', { class: 'content message', 'aria-busy': 'true' }, h('p', { class: 'lead' }, 'Loading the offer…')),
+    h('main', { class: 'content message', 'aria-busy': 'true' }, h('p', { class: 'lead' }, message)),
   );
 }

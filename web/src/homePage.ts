@@ -44,6 +44,7 @@ export function mountHomePage(root: HTMLElement): void {
         h('h1', {}, 'Scan the Chowk QR at the shop counter to get its offer'),
       ),
       h('div', { class: 'card home-card' }, h('p', {}, 'No camera handy? Type the shop code printed under the QR.'), form),
+      h('a', { class: 'home-shop-link', href: '/shop' }, 'Own a shop? Open Chowk for shops'),
     ),
   );
 }

@@ -39,6 +39,10 @@ export interface RedemptionDoc {
   firstVisit: boolean;
   /** How many codes have been issued for the current unlock (expired codes can be renewed). */
   issueCount: number;
+  /** Set when the shop marks the code as used. */
+  usedAt?: number;
+  /** Bill amount in rupees, if the shop entered one. */
+  billAmount?: number | null;
 }
 
 export type RedeemFailure =

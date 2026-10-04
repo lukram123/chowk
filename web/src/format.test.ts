@@ -1,6 +1,17 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { formatCode, formatCountdown, formatDay, normalizeShopCode, parseIndianMobile } from './format';
+import {
+  daysLeft,
+  formatCode,
+  formatCountdown,
+  formatDay,
+  formatRupees,
+  formatTime,
+  fromIndiaDateInput,
+  normalizeShopCode,
+  parseIndianMobile,
+  toIndiaDateInput,
+} from './format';
 
 describe('normalizeShopCode', () => {
   it('accepts the code as printed on the standee', () => {
@@ -45,5 +56,42 @@ describe('formatDay', () => {
 describe('formatCode', () => {
   it('adds the CH prefix', () => {
     assert.equal(formatCode('4827'), 'CH 4827');
+  });
+});
+
+describe('India dates for date inputs', () => {
+  it('converts a day to its start and end in India time', () => {
+    assert.equal(fromIndiaDateInput('2026-10-12', false), Date.UTC(2026, 9, 11, 18, 30));
+    assert.equal(fromIndiaDateInput('2026-10-12', true), Date.UTC(2026, 9, 12, 18, 30) - 1);
+  });
+
+  it('round-trips through the input format', () => {
+    const end = fromIndiaDateInput('2026-10-12', true) as number;
+    assert.equal(toIndiaDateInput(end), '2026-10-12');
+    assert.equal(toIndiaDateInput(Date.UTC(2026, 9, 11, 18, 30)), '2026-10-12');
+    assert.equal(toIndiaDateInput(Date.UTC(2026, 9, 11, 18, 29)), '2026-10-11');
+  });
+
+  it('rejects text that is not a real date', () => {
+    assert.equal(fromIndiaDateInput('', false), null);
+    assert.equal(fromIndiaDateInput('12/10/2026', false), null);
+    assert.equal(fromIndiaDateInput('2026-02-31', false), null);
+  });
+});
+
+describe('daysLeft', () => {
+  it('counts a part day as a day', () => {
+    const now = Date.UTC(2026, 9, 4, 10, 0);
+    assert.equal(daysLeft(now + 1000, now), 1);
+    assert.equal(daysLeft(now + 2 * 24 * 60 * 60 * 1000, now), 2);
+    assert.equal(daysLeft(now - 1000, now), 0);
+  });
+});
+
+describe('formatTime and formatRupees', () => {
+  it('formats for India', () => {
+    assert.equal(formatTime(Date.UTC(2026, 9, 4, 14, 12)), '7:42 pm');
+    assert.equal(formatRupees(125000), '₹1,25,000');
+    assert.equal(formatRupees(0), '₹0');
   });
 });

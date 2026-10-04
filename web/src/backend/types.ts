@@ -1,4 +1,4 @@
-// The page talks to this interface only, so the Firebase backend and the demo
+// The pages talk to these interfaces only, so the Firebase backend and the demo
 // backend are interchangeable. All times are epoch milliseconds.
 
 export interface Shop {
@@ -59,18 +59,23 @@ export class OtpFailed extends Error {
 }
 
 export interface OtpChallenge {
-  /** Resolves once the customer is signed in; throws OtpFailed otherwise. */
+  /** Resolves once the person is signed in; throws OtpFailed otherwise. */
   confirm(code: string): Promise<void>;
 }
 
-export interface Backend {
+/** Sign-in by mobile number, shared by the customer page and the shop app. */
+export interface AuthBackend {
   /** True for the built-in sample data, so the page can say so. */
   readonly isDemo: boolean;
-  /** null when no shop has this code. */
-  getShopDeal(shopCode: string): Promise<ShopDeal | null>;
   isSignedIn(): Promise<boolean>;
   /** `mobile` is a 10-digit Indian number. `recaptchaContainerId` must be an element on the page. */
   sendOtp(mobile: string, recaptchaContainerId: string): Promise<OtpChallenge>;
+  signOut(): Promise<void>;
+}
+
+export interface Backend extends AuthBackend {
+  /** null when no shop has this code. */
+  getShopDeal(shopCode: string): Promise<ShopDeal | null>;
   /** Throws RedeemFailed. `whatsappOptIn` is null when the customer was not asked. */
   redeem(shopCode: string, whatsappOptIn: boolean | null): Promise<Unlocked>;
 }

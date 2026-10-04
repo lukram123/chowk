@@ -1,51 +1,21 @@
-// Firebase backend: Firestore for the shop and deal, phone sign-in for the
-// one-time code, and the redeemDeal Cloud Function to issue the redemption code.
-import { initializeApp } from 'firebase/app';
+// Customer-side Firebase backend: Firestore for the shop and deal, and the
+// redeemDeal Cloud Function to issue the redemption code.
 import { collection, doc, getDoc, getDocs, getFirestore, limit, query, where } from 'firebase/firestore/lite';
 import type { FirebaseConfig } from '../config';
-import {
-  OtpFailed,
-  RedeemFailed,
-  type Backend,
-  type Deal,
-  type OtpFailure,
-  type RedeemFailure,
-  type Shop,
-  type Unlocked,
-} from './types';
+import { callFailure, firebaseHandle } from './firebaseApp';
+import { RedeemFailed, type Backend, type Deal, type RedeemFailure, type Shop, type Unlocked } from './types';
 
-const KNOWN_FAILURES: readonly RedeemFailure[] = [
-  'shop-not-found',
-  'no-live-deal',
-  'deal-ended',
-  'sold-out',
-  'already-used',
-];
-
-function otpFailure(err: unknown): OtpFailure {
-  const code = (err as { code?: string } | null)?.code ?? '';
-  if (code === 'auth/invalid-phone-number') return 'invalid-number';
-  if (code === 'auth/invalid-verification-code' || code === 'auth/code-expired') return 'wrong-code';
-  if (code === 'auth/too-many-requests' || code === 'auth/quota-exceeded') return 'too-many';
-  return 'unknown';
-}
+const KNOWN_FAILURES: readonly string[] = ['shop-not-found', 'no-live-deal', 'deal-ended', 'sold-out', 'already-used'];
 
 export function createFirebaseBackend(firebaseConfig: FirebaseConfig, functionsRegion: string): Backend {
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  // Auth and Functions are loaded only when the customer taps "Redeem now",
-  // so the deal itself appears as fast as possible on a slow connection.
-  const loadAuth = async () => {
-    const authModule = await import('firebase/auth');
-    const auth = authModule.getAuth(app);
-    await auth.authStateReady();
-    return { authModule, auth };
-  };
-  let recaptcha: { clear(): void } | null = null;
+  const firebase = firebaseHandle(firebaseConfig, functionsRegion);
+  const db = getFirestore(firebase.app);
 
   return {
     isDemo: false,
+    isSignedIn: firebase.isSignedIn,
+    sendOtp: firebase.sendOtp,
+    signOut: firebase.signOut,
 
     async getShopDeal(shopCode) {
       const shopSnap = await getDoc(doc(db, 'shops', shopCode));
@@ -81,49 +51,19 @@ export function createFirebaseBackend(firebaseConfig: FirebaseConfig, functionsR
       return { shop, deal };
     },
 
-    async isSignedIn() {
-      const { auth } = await loadAuth();
-      return auth.currentUser !== null;
-    },
-
-    async sendOtp(mobile, recaptchaContainerId) {
-      const { authModule, auth } = await loadAuth();
-      try {
-        recaptcha?.clear();
-        const verifier = new authModule.RecaptchaVerifier(auth, recaptchaContainerId, { size: 'invisible' });
-        recaptcha = verifier;
-        const confirmation = await authModule.signInWithPhoneNumber(auth, `+91${mobile}`, verifier);
-        return {
-          async confirm(code) {
-            try {
-              await confirmation.confirm(code);
-            } catch (err) {
-              throw new OtpFailed(otpFailure(err));
-            }
-          },
-        };
-      } catch (err) {
-        throw new OtpFailed(otpFailure(err));
-      }
-    },
-
     async redeem(shopCode, whatsappOptIn) {
-      const { auth } = await loadAuth();
-      if (!auth.currentUser) throw new RedeemFailed('not-signed-in');
-
-      const { getFunctions, httpsCallable } = await import('firebase/functions');
-      const redeemDeal = httpsCallable<{ shopCode: string; whatsappOptIn?: boolean }, Unlocked>(
-        getFunctions(app, functionsRegion),
-        'redeemDeal',
-      );
+      if (!(await firebase.isSignedIn())) throw new RedeemFailed('not-signed-in');
       try {
-        const result = await redeemDeal(whatsappOptIn === null ? { shopCode } : { shopCode, whatsappOptIn });
-        return { code: String(result.data.code), expiresAt: Number(result.data.expiresAt) };
+        const result = await firebase.call<{ shopCode: string; whatsappOptIn?: boolean }, Unlocked>(
+          'redeemDeal',
+          whatsappOptIn === null ? { shopCode } : { shopCode, whatsappOptIn },
+        );
+        return { code: String(result.code), expiresAt: Number(result.expiresAt) };
       } catch (err) {
-        const e = err as { code?: string; details?: { reason?: string } } | null;
-        if (e?.code === 'functions/unauthenticated') throw new RedeemFailed('not-signed-in');
-        const reason = e?.details?.reason as RedeemFailure | undefined;
-        throw new RedeemFailed(reason && KNOWN_FAILURES.includes(reason) ? reason : 'unknown');
+        const failure = callFailure(err);
+        if (failure.unauthenticated) throw new RedeemFailed('not-signed-in');
+        const known = failure.reason !== null && KNOWN_FAILURES.includes(failure.reason);
+        throw new RedeemFailed(known ? (failure.reason as RedeemFailure) : 'unknown');
       }
     },
   };

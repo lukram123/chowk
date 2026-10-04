@@ -29,6 +29,8 @@ export const config = {
   backend: wantsDemo ? ('demo' as const) : firebase ? ('firebase' as const) : ('unconfigured' as const),
   firebase,
   functionsRegion: value(env.VITE_FUNCTIONS_REGION) ?? 'asia-south1',
+  /** Address customers reach the site at; used in QR codes and share text. Defaults to the current address. */
+  siteUrl: value(env.VITE_SITE_URL)?.replace(/\/+$/, '') ?? null,
   appUrl: value(env.VITE_APP_URL),
   whatsappUrl: value(env.VITE_WHATSAPP_CHANNEL_URL),
   termsUrl: value(env.VITE_TERMS_URL),
