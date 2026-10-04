@@ -1,0 +1,30 @@
+rules_version = '2';
+
+// All writes go through Cloud Functions (admin SDK), which bypass these rules.
+// Clients may only read what is listed here.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Shop profile shown on the deal page. Document id is the shop code.
+    match /shops/{shopCode} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Only live deals are public. Queries must filter on status == 'live'.
+    match /deals/{dealId} {
+      allow read: if resource.data.status == 'live';
+      allow write: if false;
+    }
+
+    // A customer can read their own redemptions; codes are issued by redeemDeal.
+    match /redemptions/{redemptionId} {
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    match /users/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+  }
+}
