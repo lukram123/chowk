@@ -96,10 +96,16 @@ export function mountRedeemPage(root: HTMLElement, shopCode: string, backend: Ba
 }
 
 function topbar(shop: Shop): HTMLElement {
-  return h('header', { class: 'topbar' }, lockup(), shop.pincode ? h('span', { class: 'topbar-note' }, shop.pincode) : null);
+  return h(
+    'header',
+    { class: 'topbar' },
+    lockup(),
+    shop.pincode ? h('a', { class: 'topbar-note', href: `/p/${shop.pincode}`, 'aria-label': `All offers in ${shop.pincode}` }, shop.pincode) : null,
+  );
 }
 
 function dealView(shop: Shop, deal: Deal, onRedeem: (button: HTMLButtonElement) => void): HTMLElement {
+  document.title = `${deal.headline} at ${shop.name} · Chowk`;
   const redeemButton = h('button', { class: 'button primary', type: 'button' }, 'Redeem now');
   redeemButton.addEventListener('click', () => onRedeem(redeemButton));
 
@@ -227,19 +233,15 @@ function unlockedView(shop: Shop, deal: Deal, unlocked: Unlocked, onRenew: () =>
   tick();
   interval = setInterval(tick, 500);
 
-  const next =
-    config.appUrl || config.whatsappUrl
-      ? h(
-          'section',
-          { class: 'card next' },
-          h('h2', {}, 'See the next deal first'),
-          h('p', {}, `New offers from shops in ${shop.pincode || 'your area'}, as soon as they go live.`),
-          config.appUrl ? h('a', { class: 'button primary', href: config.appUrl }, 'Get the app') : null,
-          config.whatsappUrl
-            ? h('a', { class: 'button secondary', href: config.whatsappUrl }, 'Follow on WhatsApp')
-            : null,
-        )
-      : null;
+  const next = h(
+    'section',
+    { class: 'card next' },
+    h('h2', {}, 'More offers near you'),
+    h('p', {}, `See what other shops in ${shop.pincode || 'your area'} are offering.`),
+    config.appUrl ? h('a', { class: 'button primary', href: config.appUrl }, 'Get the app') : null,
+    config.whatsappUrl ? h('a', { class: 'button secondary', href: config.whatsappUrl }, 'Follow on WhatsApp') : null,
+    shop.pincode ? h('a', { class: 'button secondary', href: `/p/${shop.pincode}` }, `See all offers in ${shop.pincode}`) : null,
+  );
 
   const el = h(
     'div',
@@ -278,12 +280,13 @@ function failureView(reason: RedeemFailure, shop?: Shop, retry?: () => void): HT
       return messageView({
         title: 'We could not find this shop',
         body: 'Check the shop code printed on the counter and try again.',
-        action: { label: 'Enter a shop code', href: '/' },
+        action: { label: 'Enter a shop code', href: '/code' },
       });
     case 'no-live-deal':
       return messageView({
         title: 'No offer running right now',
         body: shop ? `${shop.name} has no offer on Chowk at the moment. Check back soon.` : 'Check back soon.',
+        action: shop?.pincode ? { label: `See other offers in ${shop.pincode}`, href: `/p/${shop.pincode}` } : undefined,
       });
     case 'deal-ended':
       return messageView({ title: 'This offer has ended', body: 'Ask at the counter about the next one.' });

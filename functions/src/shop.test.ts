@@ -83,6 +83,9 @@ function deal(partial: Partial<DealRecord> = {}): DealRecord {
   return {
     id: 'deal1',
     shopCode: 'MS2041',
+    shopName: 'Meera Salon',
+    shopCategory: 'Salon',
+    pincode: '560102',
     headline: 'Flat 30% off haircut and styling',
     tag: '30% off',
     terms: [],
@@ -242,6 +245,8 @@ describe('createDeal', () => {
     const created = await createDeal(store, { uid: 'owner1', input: dealInput, now: NOW });
     assert.equal(created.status, 'live');
     assert.equal(created.shopCode, 'MS2041');
+    // The shop's details are copied on, for the pincode feed.
+    assert.deepEqual([created.shopName, created.shopCategory, created.pincode], ['Meera Salon', 'Salon', '560102']);
     assert.deepEqual(
       [created.unlockedCount, created.usedCount, created.firstVisitCount, created.billTotal],
       [0, 0, 0, 0],

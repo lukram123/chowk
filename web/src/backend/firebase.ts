@@ -3,7 +3,15 @@
 import { collection, doc, getDoc, getDocs, getFirestore, limit, query, where } from 'firebase/firestore/lite';
 import type { FirebaseConfig } from '../config';
 import { callFailure, firebaseHandle } from './firebaseApp';
-import { RedeemFailed, type Backend, type Deal, type RedeemFailure, type Shop, type Unlocked } from './types';
+import {
+  RedeemFailed,
+  type Backend,
+  type Deal,
+  type FeedItem,
+  type RedeemFailure,
+  type Shop,
+  type Unlocked,
+} from './types';
 
 const KNOWN_FAILURES: readonly string[] = ['shop-not-found', 'no-live-deal', 'deal-ended', 'sold-out', 'already-used'];
 
@@ -49,6 +57,29 @@ export function createFirebaseBackend(firebaseConfig: FirebaseConfig, functionsR
         oneUsePerCustomer: d.oneUsePerCustomer !== false,
       };
       return { shop, deal };
+    },
+
+    async listOffers(pincode) {
+      // Each deal carries its shop's pincode, name and category, so this is one query.
+      const snap = await getDocs(
+        query(collection(db, 'deals'), where('pincode', '==', pincode), where('status', '==', 'live'), limit(200)),
+      );
+      const now = Date.now();
+      const items: FeedItem[] = [];
+      for (const dealDoc of snap.docs) {
+        const d = dealDoc.data();
+        if (now < Number(d.startsAt ?? 0) || now > Number(d.endsAt ?? 0)) continue;
+        items.push({
+          shopCode: String(d.shopCode ?? ''),
+          shopName: String(d.shopName ?? ''),
+          category: String(d.shopCategory ?? ''),
+          headline: String(d.headline ?? ''),
+          tag: String(d.tag ?? ''),
+          endsAt: Number(d.endsAt),
+          createdAt: Number(d.createdAt ?? 0),
+        });
+      }
+      return items;
     },
 
     async redeem(shopCode, whatsappOptIn) {

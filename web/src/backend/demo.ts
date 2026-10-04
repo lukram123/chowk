@@ -34,6 +34,30 @@ export function createDemoBackend(): Backend {
       };
     },
 
+    async listOffers(pincode) {
+      await pause(150);
+      const state = loadDemo();
+      const now = Date.now();
+      return state.deals
+        .filter((d) => d.status === 'live' && d.startsAt <= now && d.endsAt >= now)
+        .flatMap((d) => {
+          const shop = state.shops.find((s) => s.code === d.shopCode && s.pincode === pincode);
+          return shop
+            ? [
+                {
+                  shopCode: shop.code,
+                  shopName: shop.name,
+                  category: shop.category,
+                  headline: d.headline,
+                  tag: d.tag,
+                  endsAt: d.endsAt,
+                  createdAt: d.createdAt,
+                },
+              ]
+            : [];
+        });
+    },
+
     async redeem(shopCode): Promise<Unlocked> {
       await pause(300);
       return updateDemo((state) => {

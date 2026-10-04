@@ -1,6 +1,9 @@
 import './styles.css';
 import { loadBackend } from './backend';
 import { DEMO_OTP, DEMO_OWNER_MOBILE } from './backend/demo-info';
+import { config } from './config';
+import { parsePincode } from './feed';
+import { mountFeedPage } from './feedPage';
 import { normalizeShopCode } from './format';
 import { mountHomePage } from './homePage';
 import { mountRedeemPage } from './redeemPage';
@@ -38,6 +41,9 @@ async function start(root: HTMLElement): Promise<void> {
     const [{ mountShopApp }, { loadShopBackend }] = await Promise.all([import('./shop/app'), import('./shop/backend')]);
     const backend = await loadShopBackend();
     if (!backend) return notSetUp(root);
+    // The shop app is for owners only; keep it out of search results.
+    document.title = 'Chowk for shops';
+    document.head.append(h('meta', { name: 'robots', content: 'noindex' }));
     const owner = `${DEMO_OWNER_MOBILE.slice(0, 5)} ${DEMO_OWNER_MOBILE.slice(5)}`;
     const note = backend.isDemo
       ? `Demo data. Sign in with ${owner} to open the sample shop, or any other number to list a new one. Verification code ${DEMO_OTP}.`
@@ -53,9 +59,19 @@ async function start(root: HTMLElement): Promise<void> {
     : null;
   const page = frame(root, note);
 
-  const match = path.match(/^\/s\/([^/]+)\/?$/);
-  if (match) mountRedeemPage(page, normalizeShopCode(safeDecode(match[1])), backend);
-  else mountHomePage(page);
+  const shopMatch = path.match(/^\/s\/([^/]+)\/?$/);
+  const feedMatch = path.match(/^\/p\/(\d{6})\/?$/);
+  // With a launch pincode configured, the front page is that pincode's feed.
+  const feedPincode = feedMatch ? feedMatch[1] : path === '/' ? parsePincode(config.defaultPincode ?? '') : null;
+
+  if (shopMatch) {
+    mountRedeemPage(page, normalizeShopCode(safeDecode(shopMatch[1])), backend);
+  } else if (feedPincode) {
+    root.classList.add('wide'); // the feed uses the full width on larger screens
+    mountFeedPage(page, feedPincode, backend);
+  } else {
+    mountHomePage(page); // also /pincode and /code
+  }
 }
 
 const root = document.getElementById('root');

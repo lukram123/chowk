@@ -44,6 +44,10 @@ export interface ShopRecord {
 export interface DealRecord {
   id: string;
   shopCode: string;
+  /** Copied from the shop when the deal is created, so the pincode feed needs only the deals. */
+  shopName: string;
+  shopCategory: string;
+  pincode: string;
   headline: string;
   /** Short badge, e.g. "30% off". May be empty. */
   tag: string;
@@ -270,6 +274,9 @@ export async function createDeal(
   const deal: DealRecord = {
     id: store.newDealId(),
     shopCode: shop.code,
+    shopName: shop.name,
+    shopCategory: shop.category,
+    pincode: shop.pincode,
     ...input,
     status: 'live',
     unlockedCount: 0,

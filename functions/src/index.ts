@@ -170,6 +170,9 @@ function toDeal(id: string, d: Data): DealRecord {
   return {
     id,
     shopCode: String(d.shopCode ?? ''),
+    shopName: String(d.shopName ?? ''),
+    shopCategory: String(d.shopCategory ?? ''),
+    pincode: String(d.pincode ?? ''),
     headline: String(d.headline ?? ''),
     tag: String(d.tag ?? ''),
     terms: Array.isArray(d.terms) ? d.terms.map(String) : [],

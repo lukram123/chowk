@@ -31,6 +31,8 @@ export const config = {
   functionsRegion: value(env.VITE_FUNCTIONS_REGION) ?? 'asia-south1',
   /** Address customers reach the site at; used in QR codes and share text. Defaults to the current address. */
   siteUrl: value(env.VITE_SITE_URL)?.replace(/\/+$/, '') ?? null,
+  /** When set, the site's front page is this pincode's feed. */
+  defaultPincode: value(env.VITE_DEFAULT_PINCODE),
   appUrl: value(env.VITE_APP_URL),
   whatsappUrl: value(env.VITE_WHATSAPP_CHANNEL_URL),
   termsUrl: value(env.VITE_TERMS_URL),

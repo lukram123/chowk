@@ -323,6 +323,7 @@ label {
 }
 
 input[type='tel'],
+input[type='search'],
 input[type='text'] {
   width: 100%;
   min-width: 0;
@@ -969,6 +970,149 @@ h1.smaller {
 .standee-foot {
   font-size: 2.5cqw;
   color: var(--muted);
+}
+
+/* Pincode feed */
+
+#root.wide {
+  max-width: 1120px;
+}
+
+a.topbar-note {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 4px;
+}
+
+.feed {
+  gap: 20px;
+}
+
+.feed-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feed-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.feed-chips .chip {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+}
+
+.feed-retry {
+  align-self: flex-start;
+  width: auto;
+}
+
+.offer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.offer-grid:empty {
+  display: none;
+}
+
+.offer-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.offer-band {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+  background: var(--green);
+}
+
+.offer-category {
+  color: var(--on-green-muted);
+  font-size: 14px;
+}
+
+.offer-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px 16px;
+}
+
+.offer-headline {
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.feed-shop {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-radius: 18px;
+  background: var(--ink);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.feed-shop .button {
+  width: auto;
+  min-height: 44px;
+  font-size: 15px;
+}
+
+.feed-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 20px;
+  font-size: 15px;
+}
+
+.feed-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.home .card {
+  color: var(--ink);
+}
+
+@media (min-width: 720px) {
+  .feed-tools {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 20px;
+  }
+
+  .feed-tools .form {
+    flex: 0 1 320px;
+  }
+
+  .feed h1 {
+    font-size: 40px;
+  }
 }
 
 @media (min-width: 481px) {

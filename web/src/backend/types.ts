@@ -27,6 +27,17 @@ export interface ShopDeal {
   deal: Deal | null;
 }
 
+/** One live offer in a pincode's feed. */
+export interface FeedItem {
+  shopCode: string;
+  shopName: string;
+  category: string;
+  headline: string;
+  tag: string;
+  endsAt: number;
+  createdAt: number;
+}
+
 export interface Unlocked {
   /** Four digits; shown as "CH 4827". */
   code: string;
@@ -76,6 +87,8 @@ export interface AuthBackend {
 export interface Backend extends AuthBackend {
   /** null when no shop has this code. */
   getShopDeal(shopCode: string): Promise<ShopDeal | null>;
+  /** Offers running right now at shops in the pincode, in no particular order. */
+  listOffers(pincode: string): Promise<FeedItem[]>;
   /** Throws RedeemFailed. `whatsappOptIn` is null when the customer was not asked. */
   redeem(shopCode: string, whatsappOptIn: boolean | null): Promise<Unlocked>;
 }

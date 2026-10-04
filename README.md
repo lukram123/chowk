@@ -9,7 +9,7 @@ shopkeeper types the code into the shop app and marks it used.
 | Folder           | What it is                                                                     | Status        |
 | ---------------- | ------------------------------------------------------------------------------ | ------------- |
 | `web/`           | The site. TypeScript + Vite, no UI framework.                                  |               |
-| `web/src/`       | Customer redemption page, opened by a shop's QR at `/s/<shop code>`.           | First version |
+| `web/src/`       | Customer pages: a pincode's offers at `/p/<pincode>`, and the redemption page a shop's QR opens at `/s/<shop code>`. | First version |
 | `web/src/shop/`  | Shop app at `/shop`: list the shop, run an offer, check codes, print the QR.   | First version |
 | `functions/`     | Firebase Cloud Functions: code issuing and every shop operation.               | First version |
 | `app/`           | Flutter customer app for Android and iOS.                                      | Not started   |
@@ -30,8 +30,9 @@ npm run dev
 A dark banner marks demo mode. The verification code is always `123456`. Demo data lives in the
 browser's local storage, so the customer page and the shop app share it.
 
-- **Customer:** open `http://localhost:5173/s/MS2041`, redeem with any mobile number, and note
-  the code. Other sample shops: `AB1007`, and `FB3300` (no offer).
+- **Customer:** open `http://localhost:5173/p/560102` for the feed of offers, pick one (or go
+  straight to `/s/MS2041`), redeem with any mobile number, and note the code. Other sample
+  shops: `AB1007`, and `FB3300` (no offer).
 - **Shop owner:** open `http://localhost:5173/shop` and sign in with `98765 43210` to run the
   sample shop MS2041. Check the customer's code there. Any other number lets you list a new shop.
 
@@ -47,7 +48,8 @@ To start the demo over, clear the site's local storage.
    Firebase's current pricing for phone-verification SMS before launch.
 5. Register a Web app in the project settings and copy its values into `web/.env.local`
    (see `web/.env.example`). Set `VITE_SITE_URL` to the address customers will open; it goes
-   into every shop's QR code.
+   into every shop's QR code. Set `VITE_DEFAULT_PINCODE` to your launch pincode so the front
+   page shows its offers.
 6. Install the CLI and select the project:
    ```sh
    npm install -g firebase-tools
@@ -69,9 +71,22 @@ not managed from the shop app.
 
 ## How it works
 
+### Pages
+
+| Address              | What it shows                                                                  |
+| -------------------- | ------------------------------------------------------------------------------ |
+| `/`                  | The launch pincode's offers if `VITE_DEFAULT_PINCODE` is set, else the entry page. |
+| `/p/<pincode>`       | Offers running in that pincode, newest first, with search and categories.      |
+| `/s/<shop code>`     | One shop's offer and the redemption flow. This is what a shop's QR opens.      |
+| `/pincode`, `/code`  | Entry page: type a pincode or a shop code.                                     |
+| `/shop`              | The shop app.                                                                  |
+
 ### Customer
 
-1. The page reads `shops/<code>` and that shop's live deal straight from Firestore.
+The feed is one Firestore query: live deals where `pincode` matches. Each deal carries a copy of
+its shop's pincode, name and category for this.
+
+1. The offer page reads `shops/<code>` and that shop's live deal straight from Firestore.
 2. "Redeem now" signs the customer in with a one-time code sent to their mobile (first time only).
 3. The page calls `redeemDeal`, which in one transaction:
    - checks the shop has a live deal that has started and not ended,
@@ -101,7 +116,8 @@ The rules behind these are plain functions in `functions/src/redeem.ts` and
 All times are epoch milliseconds. "Today" on the dashboard is the day in India.
 
 - `shops/{shopCode}`: `name`, `category`, `pincode`, `address`, `ownerUid`, `createdAt`
-- `deals/{dealId}`: `shopCode`, `headline`, `tag`, `terms[]`, `status` (`live` | `paused` | `ended`),
+- `deals/{dealId}`: `shopCode`, `shopName`, `shopCategory`, `pincode` (copied from the shop),
+  `headline`, `tag`, `terms[]`, `status` (`live` | `paused` | `ended`),
   `startsAt`, `endsAt`, `oneUsePerCustomer`, `maxRedemptions` (number or null), `unlockedCount`,
   `usedCount`, `firstVisitCount`, `billTotal`, `createdAt`, `updatedAt`
 - `redemptions/{dealId}_{uid}`: `dealId`, `shopCode`, `uid`, `code`, `createdAt`, `expiresAt`,
@@ -112,7 +128,7 @@ All times are epoch milliseconds. "Today" on the dashboard is the day in India.
 
 ```sh
 (cd functions && npm test)   # redemption and shop rules
-(cd web && npm test)         # formatting, offer state, QR encoder
+(cd web && npm test)         # formatting, feed filtering, offer state, QR encoder
 ```
 
 ## Before a public launch
@@ -123,3 +139,5 @@ All times are epoch milliseconds. "Today" on the dashboard is the day in India.
 - Decide whether new shops should need approval. Today anyone with a verified mobile number can
   list a shop, and it is reachable at once by its code.
 - Only the owner's mobile number can check codes. Staff logins are not built.
+- The pages are built in the browser, so search engines and link previews see little of an
+  offer's text. Pre-rendering the feed and offer pages would fix that.

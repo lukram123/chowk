@@ -23,6 +23,9 @@ async function main() {
 
   await db.doc('deals/sample-ms2041').set({
     shopCode: 'MS2041',
+    shopName: 'Meera Salon',
+    shopCategory: 'Salon',
+    pincode: '560102',
     headline: 'Flat 30% off haircut and styling',
     tag: '30% off',
     terms: ['Weekdays, 11 am to 7 pm', 'Not valid with other offers', 'Show the unlocked code before billing'],
