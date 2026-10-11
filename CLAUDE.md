@@ -51,6 +51,9 @@ The mark is a map pin holding a QR corner square (`logoMark` in `web/src/ui.ts`)
   `functions/src/shop.ts`) so they can be unit tested without Firebase. `functions/src/index.ts`
   only wires them to Firestore.
 - Tests use Node's built-in runner through tsx: `npm test` in `web/` and `functions/`.
+- End-to-end testing against the Firebase emulators: `npm run emulators` in `functions/` and
+  `npm run dev:emulator` in `web/` (reads `web/.env.emulator`, stand-in project `demo-chowk`).
+  `config.emulators` switches the SDK connections in `firebaseApp.ts` and `firebase.ts`.
 - `web/` uses no UI framework on purpose: the customer page must open fast on a phone at a shop
   counter. Build DOM with the `h` helper in `web/src/ui.ts`; never put network data into
   `innerHTML`.
@@ -82,6 +85,8 @@ never been run:
   `web/src/shop/firebase.ts` against the real Firebase SDK,
 - `functions/src/index.ts` and `functions/src/seed.ts` against firebase-admin and
   firebase-functions (they type-check only against stand-in types),
+- the emulator setup (`npm run emulators`, `npm run dev:emulator`) and the emulator connections in
+  `firebaseApp.ts` and `firebase.ts`,
 - `firestore.rules` and the two composite indexes in `firestore.indexes.json` against the
   emulator or a real project. The dashboard's "today" queries need those indexes.
 

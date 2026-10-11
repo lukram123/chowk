@@ -31,6 +31,8 @@ export const config = {
   functionsRegion: value(env.VITE_FUNCTIONS_REGION) ?? 'asia-south1',
   /** Address customers reach the site at; used in QR codes and share text. Defaults to the current address. */
   siteUrl: value(env.VITE_SITE_URL)?.replace(/\/+$/, '') ?? null,
+  /** Set when the site should talk to the Firebase emulators on this computer instead of a real project. */
+  emulators: value(env.VITE_USE_EMULATORS) === 'true' ? { host: '127.0.0.1' } : null,
   /** When set, the site's front page is this pincode's feed. */
   defaultPincode: value(env.VITE_DEFAULT_PINCODE),
   appUrl: value(env.VITE_APP_URL),

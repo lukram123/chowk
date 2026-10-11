@@ -1,7 +1,17 @@
 // Customer-side Firebase backend: Firestore for the shop and deal, and the
 // redeemDeal Cloud Function to issue the redemption code.
-import { collection, doc, getDoc, getDocs, getFirestore, limit, query, where } from 'firebase/firestore/lite';
-import type { FirebaseConfig } from '../config';
+import {
+  collection,
+  connectFirestoreEmulator,
+  doc,
+  getDoc,
+  getDocs,
+  getFirestore,
+  limit,
+  query,
+  where,
+} from 'firebase/firestore/lite';
+import { config, type FirebaseConfig } from '../config';
 import { callFailure, firebaseHandle } from './firebaseApp';
 import {
   RedeemFailed,
@@ -18,6 +28,7 @@ const KNOWN_FAILURES: readonly string[] = ['shop-not-found', 'no-live-deal', 'de
 export function createFirebaseBackend(firebaseConfig: FirebaseConfig, functionsRegion: string): Backend {
   const firebase = firebaseHandle(firebaseConfig, functionsRegion);
   const db = getFirestore(firebase.app);
+  if (config.emulators) connectFirestoreEmulator(db, config.emulators.host, 8080);
 
   return {
     isDemo: false,

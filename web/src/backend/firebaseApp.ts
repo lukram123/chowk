@@ -2,7 +2,7 @@
 // mobile number and calls to Cloud Functions. Auth and Functions are loaded on
 // first use, so a page that only shows a deal does not pay for them.
 import { initializeApp, type FirebaseApp } from 'firebase/app';
-import type { FirebaseConfig } from '../config';
+import { config, type FirebaseConfig } from '../config';
 import { OtpFailed, type AuthBackend, type OtpFailure } from './types';
 
 export interface FirebaseHandle extends AuthBackend {
@@ -35,12 +35,20 @@ export function firebaseHandle(firebaseConfig: FirebaseConfig, functionsRegion: 
   if (handle) return handle;
   const app = initializeApp(firebaseConfig);
 
+  let authConnected = false;
   const loadAuth = async () => {
     const authModule = await import('firebase/auth');
     const auth = authModule.getAuth(app);
+    if (config.emulators && !authConnected) {
+      authConnected = true;
+      authModule.connectAuthEmulator(auth, `http://${config.emulators.host}:9099`, { disableWarnings: true });
+      // The emulator sends no SMS and needs no reCAPTCHA; the code appears in the emulator's log.
+      auth.settings.appVerificationDisabledForTesting = true;
+    }
     await auth.authStateReady();
     return { authModule, auth };
   };
+  let functionsConnected = false;
   let recaptcha: { clear(): void } | null = null;
 
   handle = {
@@ -79,8 +87,13 @@ export function firebaseHandle(firebaseConfig: FirebaseConfig, functionsRegion: 
     },
 
     async call<Req, Res>(name: string, data: Req): Promise<Res> {
-      const { getFunctions, httpsCallable } = await import('firebase/functions');
-      const fn = httpsCallable<Req, Res>(getFunctions(app, functionsRegion), name);
+      const { connectFunctionsEmulator, getFunctions, httpsCallable } = await import('firebase/functions');
+      const functions = getFunctions(app, functionsRegion);
+      if (config.emulators && !functionsConnected) {
+        functionsConnected = true;
+        connectFunctionsEmulator(functions, config.emulators.host, 5001);
+      }
+      const fn = httpsCallable<Req, Res>(functions, name);
       return (await fn(data)).data;
     },
   };

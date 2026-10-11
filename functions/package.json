@@ -10,7 +10,9 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test src/*.test.ts",
-    "seed": "npm run build && node lib/seed.js"
+    "seed": "npm run build && node lib/seed.js",
+    "emulators": "npm run build && firebase emulators:start --project demo-chowk",
+    "seed:emulator": "npm run build && FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=demo-chowk node lib/seed.js"
   },
   "dependencies": {
     "firebase-admin": "^13.0.0",

@@ -10,6 +10,7 @@ interface ImportMetaEnv {
   readonly VITE_FUNCTIONS_REGION?: string;
   readonly VITE_SITE_URL?: string;
   readonly VITE_DEFAULT_PINCODE?: string;
+  readonly VITE_USE_EMULATORS?: string;
   readonly VITE_APP_URL?: string;
   readonly VITE_WHATSAPP_CHANNEL_URL?: string;
   readonly VITE_TERMS_URL?: string;
